@@ -1,0 +1,67 @@
+{
+  "cursor.ai": {
+    "provider": "openai",
+    "baseURL": "https://api.siliconflow.com/v1",
+    "apiKey": "sk-jdwoywwmpqqzejmbwahlaxdmtzcquupsigxfbrxtshrzkzgl",
+    "models": {
+      "chat": "deepseek-ai/DeepSeek-V3.1",
+      "completion": "deepseek-ai/DeepSeek-V3.1",
+      "default": "deepseek-ai/DeepSeek-V3.1",
+      "lama3": "deepseek-ai/DeepSeek-V3.1",
+      "embedding": "deepseek-ai/DeepSeek-V3.1"
+    },
+    "modelSettings": {
+      "deepseek-ai/DeepSeek-V3.1": {
+        "temperature": 0.7,
+        "maxTokens": 8192,
+        "topP": 0.95,
+        "description": "DeepSeek V3.1 - Advanced model for coding and reasoning tasks via SiliconFlow"
+      }
+    },
+    "features": {
+      "codeCompletion": true,
+      "codeReview": true,
+      "debugging": true,
+      "refactoring": true,
+      "documentation": true,
+      "testGeneration": true,
+      "explainCode": true,
+      "pairProgramming": true
+    },
+    "timeout": 60000,
+    "maxRetries": 3,
+    "stream": true,
+    "contextWindow": {
+      "maxTokens": 8192,
+      "reserveTokens": 512
+    }
+  },
+  "editor": {
+    "inlineSuggest": {
+      "enabled": true,
+      "provider": "cursor"
+    },
+    "codeActionsOnSave": {
+      "source.fixAll": true,
+      "source.organizeImports": true
+    }
+  },
+  "languages": {
+    "javascript": {
+      "aiAssistance": true,
+      "autoImport": true
+    },
+    "typescript": {
+      "aiAssistance": true,
+      "autoImport": true
+    },
+    "python": {
+      "aiAssistance": true
+    }
+  },
+  "lmStudio": {
+    "server": "http://127.0.0.1:1234",
+    "healthCheck": true,
+    "autoReconnect": true
+  }
+}

@@ -1,0 +1,198 @@
+import {
+  Hammer,
+  Ruler,
+  Maximize2,
+  ThermometerSun,
+  PaintBucket,
+  MessageSquare,
+  CheckCircle2,
+} from 'lucide-react';
+import { ServiceItem, StepItem, BenefitItem, NavItem } from './types';
+
+export const COMPANY_NAME = 'Yannova';
+export const COMPANY_TAGLINE = 'Bouw, Ramen & Deuren, Renovatie, Isolatie & Crepi';
+
+export const NAV_ITEMS: NavItem[] = [
+  { label: 'Home', href: '/' },
+  { label: 'Gevel', href: '/gevel' },
+  { label: 'Over Ons', href: '/over-ons' },
+  { label: 'Diensten', href: '/diensten' },
+  { label: 'Aanpak', href: '/aanpak' },
+  { label: 'Partners', href: '/partners' },
+  { label: 'Contact', href: '/contact' },
+];
+
+export const HERO_CONTENT = {
+  title: 'Kwaliteit, Energie-efficiëntie en een Feilloze Afwerking',
+  subtitle: 'Uw betrouwbare partner voor nieuwbouw en renovatie in heel België.',
+  cta: 'Vraag uw gratis offerte aan',
+  image: 'https://www.yannovabouw.be/lovable-uploads/c67c2ffe-a42b-477f-a67d-10100999c4f0.png',
+};
+
+export const SERVICES: ServiceItem[] = [
+  {
+    id: 'ramen-deuren',
+    title: 'Ramen en Deuren',
+    description:
+      'Hoogwaardige PVC en aluminium profielen. Isolerend, duurzaam en onderhoudsvriendelijk voor maximale energiebesparing.',
+    image: 'https://www.yannovabouw.be/lovable-uploads/c042e299-3e07-4212-b6a2-5c6297e61d69.png',
+    icon: Maximize2,
+  },
+  {
+    id: 'renovatie',
+    title: 'Renovatie',
+    description:
+      'Totaalrenovaties van ruwbouw tot afwerking. Wij zijn uw enige aanspreekpunt voor een zorgeloos traject.',
+    image: 'https://www.yannovabouw.be/lovable-uploads/16676485-bd4d-49a4-a5a6-89e07254fa23.png',
+    icon: Hammer,
+  },
+  {
+    id: 'isolatie',
+    title: 'Isolatiewerken',
+    description:
+      'Dak-, muur- en gevelisolatie. Verlaag uw energiekosten en verhoog uw wooncomfort direct.',
+    image: 'https://www.yannovabouw.be/lovable-uploads/9678ebf6-952f-45fd-a507-50b06b6a2a06.png',
+    icon: ThermometerSun,
+  },
+  {
+    id: 'crepi',
+    title: 'Crepi Gevelafwerking',
+    description:
+      'Strakke en duurzame gevelafwerking die uw woning beschermt en verfraait. Ideaal voor nieuwbouw en renovatie.',
+    image: 'https://www.yannovabouw.be/lovable-uploads/003a3c82-53d0-4c81-8d96-4ae5ad333f15.png',
+    icon: PaintBucket,
+  },
+];
+
+
+export const APPROACH_STEPS: StepItem[] = [
+  {
+    id: 1,
+    title: 'Intake & Opmeting',
+    description: 'We komen ter plaatse voor een nauwkeurige opmeting en luisteren naar uw wensen.',
+    icon: Ruler,
+  },
+  {
+    id: 2,
+    title: 'Advies op Maat',
+    description: 'U ontvangt een duidelijk plan en een transparante offerte zonder verrassingen.',
+    icon: MessageSquare,
+  },
+  {
+    id: 3,
+    title: 'Vakkundige Uitvoering',
+    description: 'Onze ervaren vakmensen voeren de werken uit met oog voor detail en precisie.',
+    icon: Hammer,
+  },
+  {
+    id: 4,
+    title: 'Nette Oplevering',
+    description: 'We leveren alles proper op en controleren samen met u het eindresultaat.',
+    icon: CheckCircle2,
+  },
+];
+
+export const WHY_US_BENEFITS: BenefitItem[] = [
+  { id: 'xp', text: 'Jarenlange ervaring in de bouwsector' },
+  { id: 'agree', text: 'Correcte afspraken & planning' },
+  { id: 'mat', text: 'Gebruik van duurzame, hoogwaardige materialen' },
+  { id: 'fin', text: 'Propere afwerking en nette werf' },
+  { id: 'reg', text: 'Actief in heel België' },
+  { id: 'personal', text: 'Persoonlijke aanpak en één aanspreekpunt' },
+];
+
+import { Project, Testimonial } from './types';
+
+export const PROJECTS: Project[] = [
+  {
+    id: 'project-1',
+    title: 'Gevelrenovatie Villa Brasschaat',
+    description: 'Volledige gevelrenovatie met crepi afwerking en nieuwe isolatie. De woning kreeg een moderne uitstraling met behoud van het oorspronkelijke karakter.',
+    type: 'gevelwerken',
+    images: [
+      'https://www.yannovabouw.be/lovable-uploads/003a3c82-53d0-4c81-8d96-4ae5ad333f15.png',
+      'https://www.yannovabouw.be/lovable-uploads/c67c2ffe-a42b-477f-a67d-10100999c4f0.png',
+    ],
+    completedDate: '2024-09',
+    location: 'Brasschaat',
+  },
+  {
+    id: 'project-2',
+    title: 'Totaalrenovatie Rijwoning Antwerpen',
+    description: 'Complete renovatie van een rijwoning inclusief nieuwe ramen, isolatie en gevelwerken. Van ruwbouw tot afwerking in één traject.',
+    type: 'renovatie',
+    images: [
+      'https://www.yannovabouw.be/lovable-uploads/16676485-bd4d-49a4-a5a6-89e07254fa23.png',
+    ],
+    completedDate: '2024-07',
+    location: 'Antwerpen',
+  },
+  {
+    id: 'project-3',
+    title: 'Gevelisolatie Appartement Gent',
+    description: 'Buitengevelisolatie met EPS en crepi afwerking. Energiebesparing van meer dan 30% gerealiseerd.',
+    type: 'isolatie',
+    images: [
+      'https://www.yannovabouw.be/lovable-uploads/9678ebf6-952f-45fd-a507-50b06b6a2a06.png',
+    ],
+    completedDate: '2024-05',
+    location: 'Gent',
+  },
+  {
+    id: 'project-4',
+    title: 'Ramen en Deuren Nieuwbouw Mechelen',
+    description: 'Plaatsing van hoogwaardige PVC ramen en deuren met drievoudige beglazing voor optimale isolatie.',
+    type: 'ramen-deuren',
+    images: [
+      'https://www.yannovabouw.be/lovable-uploads/c042e299-3e07-4212-b6a2-5c6297e61d69.png',
+    ],
+    completedDate: '2024-03',
+    location: 'Mechelen',
+  },
+  {
+    id: 'project-5',
+    title: 'Crepi Renovatie Woning Leuven',
+    description: 'Vernieuwing van bestaande crepi met moderne structuur en kleur. Inclusief vochtbehandeling.',
+    type: 'gevelwerken',
+    images: [
+      'https://www.yannovabouw.be/lovable-uploads/003a3c82-53d0-4c81-8d96-4ae5ad333f15.png',
+    ],
+    completedDate: '2024-01',
+    location: 'Leuven',
+  },
+];
+
+export const TESTIMONIALS: Testimonial[] = [
+  {
+    id: 'testimonial-1',
+    customerName: 'Jan Peeters',
+    projectType: 'Gevelrenovatie',
+    reviewText: 'Uitstekende service van begin tot eind. Het team van Yannova heeft onze gevel volledig getransformeerd. Zeer tevreden met het resultaat en de communicatie was top!',
+    rating: 5,
+    date: '2024-10',
+  },
+  {
+    id: 'testimonial-2',
+    customerName: 'Marie Dubois',
+    projectType: 'Ramen en Deuren',
+    reviewText: 'Professionele plaatsing van onze nieuwe ramen. Het verschil in isolatie is direct merkbaar. Aanrader voor iedereen die kwaliteit zoekt.',
+    rating: 5,
+    date: '2024-08',
+  },
+  {
+    id: 'testimonial-3',
+    customerName: 'Peter Janssens',
+    projectType: 'Totaalrenovatie',
+    reviewText: 'Yannova heeft onze volledige renovatie begeleid. Één aanspreekpunt voor alles, dat maakte het zo makkelijk. Het eindresultaat overtreft onze verwachtingen.',
+    rating: 5,
+    date: '2024-06',
+  },
+  {
+    id: 'testimonial-4',
+    customerName: 'Sophie Van den Berg',
+    projectType: 'Isolatie',
+    reviewText: 'Dankzij de gevelisolatie van Yannova is onze energiefactuur flink gedaald. Vakkundig werk en netjes opgeleverd.',
+    rating: 4,
+    date: '2024-04',
+  },
+];
