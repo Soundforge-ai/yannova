@@ -1,39 +1,64 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { MessageCircle, X, Send, Bot, User, Loader2, Minimize2 } from 'lucide-react';
+import { chatStorage, ChatSession } from '../lib/chatStorage';
+import { settingsStorage } from '../lib/settingsStorage';
+import { chatService } from '../lib/chatService';
 
-interface Message {
+export interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
   timestamp: Date;
 }
 
-const SYSTEM_PROMPT = `Je bent een vriendelijke en behulpzame assistent voor Yannova, een Belgisch bouw- en renovatiebedrijf.
-
-Over Yannova:
-- Gespecialiseerd in: ramen en deuren, renovaties, isolatiewerken, gevelwerken en crepi
-- Actief in heel België (Vlaanderen en Brussel)
-- 15+ jaar ervaring
-- Contact: +32 412 34 56 78, info@yannova.be
-- Adres: Bouwstraat 123, 1000 Brussel
-
-Diensten:
-1. Ramen en Deuren - PVC en aluminium profielen
-2. Renovatie - Totaalrenovaties van ruwbouw tot afwerking
-3. Isolatiewerken - Dak-, muur- en gevelisolatie
-4. Gevelwerken - Gevelbepleistering, gevelbescherming, gevelisolatie, steenstrips, gevelrenovatie
-5. Crepi - Moderne gevelafwerking met patronen
-
-Instructies:
-- Antwoord altijd in het Nederlands
-- Wees vriendelijk en professioneel
-- Verwijs klanten naar het contactformulier of telefoonnummer voor offertes
-- Houd antwoorden kort en bondig (max 2-3 zinnen tenzij meer detail nodig is)
-- Als je iets niet weet over Yannova, zeg dat eerlijk en verwijs naar contact`;
-
 const Chatbot: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [botName, setBotName] = useState('Yannova Assistent'); // Dynamic bot name
+
+  // Load settings specifically for bot name and updates
+  useEffect(() => {
+    const loadSettings = () => {
+      const settings = settingsStorage.getSettings();
+      setBotName(settings.botName);
+    };
+    loadSettings();
+    window.addEventListener('settings-updated', loadSettings);
+    return () => window.removeEventListener('settings-updated', loadSettings);
+  }, []);
+
+  /* ... existing state ... */
+  const [sessionId, setSessionId] = useState<string>('');
+
+  // Initialize session
+  useEffect(() => {
+    // Check for existing active session or create new one
+    // For simplicity in this demo, we create a new session on page load
+    // In a real app, you might check localStorage for an active session ID first
+    const newSession = chatStorage.createSession();
+    setSessionId(newSession.id);
+
+    const settings = settingsStorage.getSettings(); // Get current name for greeting if needed, though greeting is hardcoded usually
+
+    // Add initial greeting to the session
+    const initialMessage: Message = {
+      id: '1',
+      role: 'assistant',
+      content: `Hallo! 👋 Ik ben ${settings.botName}. Hoe kan ik u helpen met uw bouw- of renovatieproject?`,
+      timestamp: new Date(),
+    };
+
+    const sessionWithGreeting = {
+      ...newSession,
+      messages: [initialMessage],
+      lastMessageTime: new Date()
+    };
+
+    // Initial save
+    chatStorage.saveSession(sessionWithGreeting);
+    setIsLoading(false); // Ensure loading is false
+  }, []);
+
   const [messages, setMessages] = useState<Message[]>([
     {
       id: '1',
@@ -46,6 +71,8 @@ const Chatbot: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -61,6 +88,20 @@ const Chatbot: React.FC = () => {
     }
   }, [isOpen, isMinimized]);
 
+  // Cleanup functie voor abort controller en timeouts bij unmount
+  useEffect(() => {
+    return () => {
+      // Abort pending fetch requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      // Clear pending timeouts
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, []);
+
   const sendMessage = async () => {
     if (!input.trim() || isLoading) return;
 
@@ -71,72 +112,57 @@ const Chatbot: React.FC = () => {
       timestamp: new Date(),
     };
 
-    setMessages((prev) => [...prev, userMessage]);
+    // Update local state
+    const updatedMessages = [...messages, userMessage];
+    setMessages(updatedMessages);
     setInput('');
     setIsLoading(true);
 
+    // Save to storage
+    if (sessionId) {
+      chatStorage.saveSession({
+        id: sessionId,
+        startTime: messages[0]?.timestamp || new Date(),
+        lastMessageTime: new Date(),
+        messages: updatedMessages,
+        preview: userMessage.content.substring(0, 50) + (userMessage.content.length > 50 ? '...' : ''),
+        status: 'active',
+        tags: ['Inquiry']
+      });
+    }
+
+    // Abort previous request if it exists
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+
+    // Create new AbortController for this request
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
+
     try {
-      // Build messages array for GLM API (OpenAI-compatible format)
+      // System prompt construction
+      const systemPrompt = settingsStorage.getFullSystemPrompt();
+
+      // Build message history
+      const historyMessages: any[] = messages
+        .filter((msg) => msg.role !== 'assistant' || msg.id !== '1') // Filter out initial greeting logic if needed
+        .map((msg) => ({
+          role: msg.role as any,
+          content: msg.content,
+        }));
+
       const apiMessages = [
-        {
-          role: 'system',
-          content: SYSTEM_PROMPT,
-        },
-        ...messages
-          .filter((msg) => msg.role !== 'assistant' || msg.id !== '1') // Filter out initial greeting
-          .map((msg) => ({
-            role: msg.role === 'user' ? 'user' : 'assistant',
-            content: msg.content,
-          })),
-        {
-          role: 'user',
-          content: userMessage.content,
-        },
+        { role: 'system', content: systemPrompt },
+        ...historyMessages,
+        { role: 'user', content: userMessage.content }
       ];
 
-      // Get API key from environment
-      const apiKey = (import.meta as any).env?.VITE_GLM_API_KEY || '811527f3930042a1bbb640cb781698ed.8vd45senzrMRJmhd';
-      
-      console.log('Making GLM API call with key:', apiKey.substring(0, 20) + '...'); // Debug: show first 20 chars
-      
-      // Call GLM API (Naga.ac)  
-      const response = await fetch('https://api.naga.ac/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: 'glm-4.5', // GLM-4.5 model
-          messages: apiMessages,
-          temperature: 0.7,
-          max_tokens: 500,
-        }),
-      });
+      console.log('Sending message via chatService...');
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { message: errorText, status: response.status };
-        }
-        console.error('GLM API error:', {
-          status: response.status,
-          statusText: response.statusText,
-          error: errorData
-        });
-        throw new Error(errorData.message || `API request failed: ${response.status} ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      console.log('GLM API response:', data); // Debug log
-      
-      const assistantContent =
-        data.choices?.[0]?.message?.content ||
-        data.choices?.[0]?.delta?.content ||
-        'Sorry, ik kon geen antwoord genereren. Probeer het opnieuw.';
+      // Use the unified chatService
+      // Note: chatService returns a string (the content) directly
+      const assistantContent = await chatService.sendMessage(apiMessages, abortController.signal);
 
       const assistantMessage: Message = {
         id: (Date.now() + 1).toString(),
@@ -145,25 +171,69 @@ const Chatbot: React.FC = () => {
         timestamp: new Date(),
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
-    } catch (error: any) {
-      console.error('Chatbot error:', error);
-      
-      // Extract error message for better debugging
-      let errorMsg = error.message || 'Onbekende fout';
-      if (errorMsg.includes('authentication') || errorMsg.includes('API key')) {
-        errorMsg = 'API authenticatie mislukt. Controleer of de API key geldig is.';
+      // Only update state if request wasn't aborted
+      if (!abortController.signal.aborted) {
+        const finalMessages = [...updatedMessages, assistantMessage];
+        setMessages(finalMessages);
+
+        // Save assistant response to storage
+        if (sessionId) {
+          chatStorage.saveSession({
+            id: sessionId,
+            startTime: messages[0]?.timestamp || new Date(),
+            lastMessageTime: new Date(),
+            messages: finalMessages,
+            preview: userMessage.content.substring(0, 50) + '...', // Keep preview based on last user input roughly
+            status: 'active',
+            tags: ['Inquiry']
+          });
+        }
       }
-      
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: `Sorry, er ging iets mis met de chatbot service (${errorMsg}). U kunt ons bereiken via telefoon (+32 412 34 56 78) of email (info@yannova.be).`,
-        timestamp: new Date(),
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+    } catch (error: any) {
+      // Don't handle error if request was aborted (component unmounted)
+      if (error.name === 'AbortError') {
+        return;
+      }
+
+      console.error('Chatbot error:', error);
+
+      // Only update state if request wasn't aborted
+      if (!abortController.signal.aborted) {
+        // Extract error message for better debugging
+        let errorMsg = error.message || 'Onbekende fout';
+
+        const errorMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: `Sorry, er ging iets mis (${errorMsg}). U kunt ons bereiken via telefoon (+32 412 34 56 78) of email (info@yannova.be).`,
+          timestamp: new Date(),
+        };
+
+        const finalMessages = [...updatedMessages, errorMessage];
+        setMessages(finalMessages);
+
+        // Save error response to storage
+        if (sessionId) {
+          chatStorage.saveSession({
+            id: sessionId,
+            startTime: messages[0]?.timestamp || new Date(),
+            lastMessageTime: new Date(),
+            messages: finalMessages,
+            preview: userMessage.content.substring(0, 50),
+            status: 'active',
+            tags: ['Error']
+          });
+        }
+      }
     } finally {
-      setIsLoading(false);
+      // Only update loading state if request wasn't aborted
+      if (!abortController.signal.aborted) {
+        setIsLoading(false);
+      }
+      // Clear abort controller reference
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
     }
   };
 
@@ -199,11 +269,10 @@ const Chatbot: React.FC = () => {
       {/* Chat Window */}
       {isOpen && (
         <div
-          className={`fixed z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 transition-all duration-300 ${
-            isMinimized
-              ? 'bottom-6 right-6 w-72 h-14'
-              : 'bottom-6 right-6 w-[380px] h-[550px] max-h-[80vh]'
-          }`}
+          className={`fixed z-50 bg-white rounded-2xl shadow-2xl border border-gray-200 transition-all duration-300 ${isMinimized
+            ? 'bottom-6 right-6 w-72 h-14'
+            : 'bottom-6 right-6 w-[380px] h-[550px] max-h-[80vh]'
+            }`}
         >
           {/* Header */}
           <div className="bg-brand-dark text-white px-4 py-3 rounded-t-2xl flex items-center justify-between">
@@ -213,7 +282,7 @@ const Chatbot: React.FC = () => {
               </div>
               {!isMinimized && (
                 <div>
-                  <h3 className="font-semibold">Yannova Assistent</h3>
+                  <h3 className="font-semibold">{botName}</h3>
                   <p className="text-xs text-gray-300">Online • Antwoordt direct</p>
                 </div>
               )}
@@ -246,18 +315,16 @@ const Chatbot: React.FC = () => {
                     className={`flex gap-3 ${message.role === 'user' ? 'flex-row-reverse' : ''}`}
                   >
                     <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        message.role === 'user' ? 'bg-brand-accent text-white' : 'bg-gray-100 text-gray-600'
-                      }`}
+                      className={`w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0 ${message.role === 'user' ? 'bg-brand-accent text-white' : 'bg-gray-100 text-gray-600'
+                        }`}
                     >
                       {message.role === 'user' ? <User size={16} /> : <Bot size={16} />}
                     </div>
                     <div
-                      className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${
-                        message.role === 'user'
-                          ? 'bg-brand-accent text-white rounded-br-md'
-                          : 'bg-gray-100 text-gray-800 rounded-bl-md'
-                      }`}
+                      className={`max-w-[75%] px-4 py-2.5 rounded-2xl ${message.role === 'user'
+                        ? 'bg-brand-accent text-white rounded-br-md'
+                        : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                        }`}
                     >
                       <p className="text-sm whitespace-pre-wrap">{message.content}</p>
                     </div>
@@ -287,8 +354,15 @@ const Chatbot: React.FC = () => {
                       <button
                         key={idx}
                         onClick={() => {
+                          // Clear previous timeout if it exists
+                          if (timeoutRef.current) {
+                            clearTimeout(timeoutRef.current);
+                          }
                           setInput(q);
-                          setTimeout(() => sendMessage(), 100);
+                          timeoutRef.current = setTimeout(() => {
+                            timeoutRef.current = null;
+                            sendMessage();
+                          }, 100);
                         }}
                         className="text-xs px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-full transition-colors"
                       >

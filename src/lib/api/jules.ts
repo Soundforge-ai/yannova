@@ -15,8 +15,7 @@ export interface JulesSourceContext {
 
 export type JulesAutomationMode = 
   | 'AUTO_CREATE_PR'
-  | 'MANUAL'
-  | 'AUTO_COMMIT';
+  | 'MANUAL';
 
 export interface JulesCreateSessionRequest {
   prompt: string;
@@ -31,7 +30,17 @@ export interface JulesSession {
   title?: string;
   createdAt?: string;
   updatedAt?: string;
+  prompt?: string;
+  prUrl?: string;
+  branch?: string;
 }
+
+export type JulesSessionStatus = 
+  | 'PENDING'
+  | 'RUNNING'
+  | 'COMPLETED'
+  | 'FAILED'
+  | 'CANCELLED';
 
 export interface JulesApiResponse<T = any> {
   success: boolean;
@@ -44,11 +53,14 @@ export interface JulesApiResponse<T = any> {
  * Haalt de Jules API key op uit environment variables
  */
 function getJulesApiKey(): string {
-  const apiKey = (import.meta as any).env?.JULES_API_KEY || 
+  // Vite requires VITE_ prefix for environment variables exposed to the browser
+  const apiKey = (import.meta as any).env?.VITE_JULES_API_KEY || 
+                 (import.meta as any).env?.JULES_API_KEY ||
+                 process.env?.VITE_JULES_API_KEY ||
                  process.env?.JULES_API_KEY;
   
   if (!apiKey) {
-    throw new Error('JULES_API_KEY is niet geconfigureerd in environment variables');
+    throw new Error('VITE_JULES_API_KEY is niet geconfigureerd in environment variables. Voeg VITE_JULES_API_KEY toe aan .env.local');
   }
   
   return apiKey;
@@ -89,9 +101,21 @@ async function julesApiCall<T>(
         error: errorData,
       });
       
+      // Maak gebruiksvriendelijke error message
+      let errorMessage = errorData.message || errorText || `API request failed: ${response.status}`;
+      
+      // Specifieke messages voor veelvoorkomende errors
+      if (response.status === 404) {
+        errorMessage = `404 NOT_FOUND: Repository niet gevonden. Zorg dat de repository "Soundforge-ai/yannova" verbonden is met Jules via https://jules.google.com`;
+      } else if (response.status === 401 || response.status === 403) {
+        errorMessage = `Authenticatie fout (${response.status}): Controleer je API key en repository toegang`;
+      } else if (response.status >= 500) {
+        errorMessage = `Server fout (${response.status}): Probeer het later opnieuw`;
+      }
+      
       return {
         success: false,
-        error: errorData.message || errorText || `API request failed: ${response.status}`,
+        error: errorMessage,
         status: response.status,
       };
     }
@@ -138,9 +162,29 @@ async function julesApiCall<T>(
 export async function createJulesSession(
   request: JulesCreateSessionRequest
 ): Promise<JulesApiResponse<JulesSession>> {
+  // Jules API verwacht snake_case en specifieke structuur
+  const apiRequest: Record<string, any> = {
+    prompt: request.prompt,
+    title: request.title,
+  };
+
+  // Voeg source_context toe als aanwezig (snake_case voor API)
+  if (request.sourceContext) {
+    apiRequest.source_context = {
+      source: request.sourceContext.source || 'sources/',
+      github_repo_context: request.sourceContext.githubRepoContext || {},
+    };
+  } else {
+    // Jules vereist altijd een source_context
+    apiRequest.source_context = {
+      source: 'sources/',
+      github_repo_context: {},
+    };
+  }
+
   return julesApiCall<JulesSession>('/sessions', {
     method: 'POST',
-    body: JSON.stringify(request),
+    body: JSON.stringify(apiRequest),
   });
 }
 
@@ -193,6 +237,26 @@ export function createGitHubContext(
  * );
  * ```
  */
+/**
+ * Detecteert automatisch de GitHub repository informatie
+ * Note: In browser context kunnen we niet direct git commands uitvoeren,
+ * dus gebruiken we de bekende repository informatie
+ */
+export async function detectGitHubRepository(): Promise<{
+  username: string;
+  repository: string;
+  branch: string;
+}> {
+  // In browser context kunnen we niet git commands uitvoeren
+  // Gebruik de bekende repository informatie
+  // Dit kan later worden uitgebreid met een API call of config file
+  return {
+    username: 'Soundforge-ai',
+    repository: 'yannova',
+    branch: 'main',
+  };
+}
+
 export async function createYannovaJulesSession(
   prompt: string,
   options: {
@@ -201,19 +265,38 @@ export async function createYannovaJulesSession(
     githubUsername?: string;
     repository?: string;
     branch?: string;
+    autoDetectRepo?: boolean;
+    skipSourceContext?: boolean; // Nieuw: skip repository context als niet verbonden
   } = {}
 ): Promise<JulesApiResponse<JulesSession>> {
   const {
     automationMode = 'MANUAL',
     title,
-    githubUsername = 'innovarslabo', // Default, kan worden aangepast
-    repository = 'yannova',
+    autoDetectRepo = true,
     branch = 'main',
+    // Default naar true om 404 errors te voorkomen wanneer repo niet verbonden is
+    skipSourceContext = true,
   } = options;
+
+  // Auto-detect repository als niet expliciet opgegeven
+  let githubUsername = options.githubUsername;
+  let repository = options.repository;
+
+  if (autoDetectRepo && (!githubUsername || !repository)) {
+    const detected = await detectGitHubRepository();
+    githubUsername = githubUsername || detected.username;
+    repository = repository || detected.repository;
+  } else {
+    // Defaults als niet gedetecteerd kan worden
+    githubUsername = githubUsername || 'Soundforge-ai';
+    repository = repository || 'yannova';
+  }
 
   return createJulesSession({
     prompt,
-    sourceContext: createGitHubContext(githubUsername, repository, branch),
+    // Skip sourceContext als skipSourceContext is true of als automationMode MANUAL is
+    // Dit voorkomt 404 errors wanneer repository niet verbonden is
+    sourceContext: skipSourceContext ? undefined : createGitHubContext(githubUsername, repository, branch),
     automationMode,
     title: title || `Yannova: ${prompt.substring(0, 50)}...`,
   });

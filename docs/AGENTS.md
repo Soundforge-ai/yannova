@@ -261,9 +261,8 @@ const { createQuickSession, isLoading, error } = useJules();
 ```
 
 **Automation Modes**:
-- `AUTO_CREATE_PR`: Maakt automatisch een pull request aan
-- `AUTO_COMMIT`: Commit automatisch naar de branch
-- `MANUAL`: Vereist handmatige review en goedkeuring
+- `AUTO_CREATE_PR`: Maakt automatisch een pull request aan met de wijzigingen
+- `MANUAL`: Vereist handmatige review en goedkeuring voordat wijzigingen worden toegepast
 
 **Environment Setup**:
 De `JULES_API_KEY` moet zijn geconfigureerd in `.env.local` voor gebruik in de frontend.

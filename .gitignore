@@ -36,3 +36,5 @@ Thumbs.db
 # Build outputs
 *.mp4
 !public/**/*.mp4
+.vercel
+.env*.local
