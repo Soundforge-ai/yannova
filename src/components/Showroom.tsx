@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import '@google/model-viewer';
 import { ChevronLeft, ChevronRight, RotateCcw, Maximize2, Smartphone, Sun, Moon, Lightbulb } from 'lucide-react';
+import { getShowroomModels, ShowroomModel } from '../lib/ai/3d-api';
 
 // TypeScript declaration for model-viewer met uitgebreide lighting opties
 declare global {
@@ -163,9 +164,30 @@ const Showroom: React.FC = () => {
   const [modelError, setModelError] = useState(false);
   const [lighting, setLighting] = useState<LightingPreset>('studio');
   const [isAutoRotating, setIsAutoRotating] = useState(true);
+  const [dynamicModels, setDynamicModels] = useState<ShowroomModel[]>([]);
   const modelViewerRef = useRef<HTMLElement>(null);
 
-  const door = DOORS[currentDoor];
+  // Load dynamic models from admin panel
+  useEffect(() => {
+    const published = getShowroomModels().filter(m => m.published);
+    setDynamicModels(published);
+  }, []);
+
+  // Combine static and dynamic doors
+  const allDoors: Door[] = [
+    ...DOORS,
+    ...dynamicModels.map((m, idx) => ({
+      id: DOORS.length + idx + 1,
+      name: m.name,
+      description: m.description,
+      model: m.modelPath,
+      color: m.color,
+      features: m.features,
+      price: m.price,
+    })),
+  ];
+
+  const door = allDoors[currentDoor] || allDoors[0];
   const lightingConfig = LIGHTING_PRESETS[lighting];
 
   // Fallback naar demo model als lokaal model niet bestaat
@@ -175,11 +197,11 @@ const Showroom: React.FC = () => {
 
   const nextDoor = () => {
     setModelError(false);
-    setCurrentDoor((prev) => (prev + 1) % DOORS.length);
+    setCurrentDoor((prev) => (prev + 1) % allDoors.length);
   };
   const prevDoor = () => {
     setModelError(false);
-    setCurrentDoor((prev) => (prev - 1 + DOORS.length) % DOORS.length);
+    setCurrentDoor((prev) => (prev - 1 + allDoors.length) % allDoors.length);
   };
 
   // Reset camera naar beginpositie
@@ -340,7 +362,7 @@ const Showroom: React.FC = () => {
           <div className="space-y-6">
             {/* Door selector */}
             <div className="flex gap-3 flex-wrap">
-              {DOORS.map((d, index) => (
+              {allDoors.map((d, index) => (
                 <button
                   key={d.id}
                   onClick={() => {

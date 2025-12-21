@@ -1,0 +1,36 @@
+# This file specifies files that are *not* uploaded to Google Cloud
+# using gcloud. It follows the same syntax as .gitignore
+
+node_modules/
+.git/
+.gitignore
+.env
+.env.local
+.env.*.local
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+test/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+coverage/
+.vite/
+dist/.vite/
+*.md
+docs/
+scripts/
+mcp-crawler/
+mcp-showroom-crawler/
+demo/
+.vercel/
+vercel.json
+

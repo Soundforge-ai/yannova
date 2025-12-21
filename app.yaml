@@ -1,0 +1,23 @@
+runtime: nodejs20
+
+# App Engine configuratie voor API routes (als nodig)
+handlers:
+  # Serve statische bestanden uit dist folder
+  - url: /(.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|pdf|glb|mp4|html))
+    static_files: dist/\1
+    upload: dist/(.*\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot|pdf|glb|mp4|html))
+    expiration: 1y
+    http_headers:
+      Cache-Control: "public, max-age=31536000"
+
+  # Serve index.html voor alle andere routes (SPA routing)
+  - url: /.*
+    static_files: dist/index.html
+    upload: dist/index.html
+    http_headers:
+      Cache-Control: "public, max-age=0, must-revalidate"
+
+# Environment variables (worden overschreven door .env.yaml of Cloud Console)
+env_variables:
+  NODE_ENV: production
+

@@ -1,24 +1,21 @@
 {
   "name": "mcp-showroom-crawler",
-  "version": "0.1.0",
-  "description": "MCP server for crawling showroom content including images, PDFs, and media",
-  "type": "module",
+  "version": "1.0.0",
+  "description": "MCP server for crawling Yannova showroom content",
   "main": "index.js",
+  "type": "module",
   "scripts": {
     "start": "node index.js"
   },
-  "keywords": [
-    "mcp",
-    "crawler",
-    "showroom",
-    "scraper"
-  ],
-  "author": "",
-  "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^0.6.0",
+    "axios": "^1.6.0",
     "cheerio": "^1.0.0-rc.12",
-    "axios": "^1.6.2",
-    "mime-types": "^2.1.35"
-  }
+    "chrome-aws-lambda": "^10.1.0",
+    "puppeteer": "^21.5.0",
+    "puppeteer-core": "^21.5.0"
+  },
+  "keywords": ["mcp", "crawler", "showroom"],
+  "author": "",
+  "license": "MIT"
 }

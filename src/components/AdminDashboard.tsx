@@ -58,14 +58,15 @@ import { pageStorage, PageData } from '../lib/pageStorage';
 import { mediaStorage, MediaItem } from '../lib/mediaStorage';
 import { analyzeConversation, generateSEO, generateAdCopy } from '../lib/ai';
 import { chatService } from '../lib/chatService';
-import { ThreeDBuilder } from './admin/ThreeDBuilder';
+
 import { SEOManager } from './admin/SEOManager';
 import { Lead } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
 import { COMPANY_NAME } from '../constants';
 import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
-import ThreeDBuilder from './admin/ThreeDBuilder';
+import ThreeDBuilderFree from './admin/ThreeDBuilderFree';
+import V0Generator from './admin/V0Generator';
 
 const GOOGLE_CLIENT_ID = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
 
@@ -74,7 +75,8 @@ const ALLOWED_ADMIN_EMAILS = [
   'innovar.labs7@gmail.com',
   'windowpro.be@gmail.com',
   'info@yannova.be',
-  'roustamyandiev00@gmail.com'
+  'roustamyandiev00@gmail.com',
+  'aimeester777@gmail.com'
 ];
 
 interface AdminDashboardProps {
@@ -83,7 +85,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabType = 'dashboard' | 'leads' | 'settings' | 'chats' | 'pages' | 'media' | 'marketing' | '3dbuilder' | 'seo';
+type TabType = 'dashboard' | 'leads' | 'settings' | 'chats' | 'pages' | 'media' | 'marketing' | '3dbuilder' | 'seo' | 'v0';
 type FilterStatus = 'all' | Lead['status'];
 
 const ITEMS_PER_PAGE = 10;
@@ -899,6 +901,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             3D Builder
           </button>
           <button
+            onClick={() => setActiveTab('v0')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'v0' ? 'bg-brand-accent text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              }`}
+          >
+            <Sparkles size={20} />
+            V0 Generator
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-brand-accent text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
               }`}
@@ -939,7 +949,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                     activeTab === 'pages' ? 'Paginabeheer' :
                       activeTab === 'media' ? 'Media Bibliotheek' :
                         activeTab === 'marketing' ? 'AI Marketing Tools' :
-                          activeTab === '3dbuilder' ? '3D Model Builder' : 'Instellingen'}
+
+                          activeTab === '3dbuilder' ? '3D Model Builder' :
+                            activeTab === 'v0' ? 'V0 Component Generator' : 'Instellingen'}
             </h1>
             <p className="text-gray-500">Welkom terug, Admin</p>
           </div>
@@ -1769,7 +1781,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
         )}
 
         {activeTab === '3dbuilder' && (
-          <ThreeDBuilder />
+          <ThreeDBuilderFree />
+        )}
+
+        {activeTab === 'v0' && (
+          <V0Generator />
         )}
 
         {activeTab === 'settings' && (

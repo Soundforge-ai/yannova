@@ -26,14 +26,15 @@ declare global {
         React.HTMLAttributes<HTMLElement> & {
           src?: string;
           alt?: string;
-          ar?: boolean;
+          ar?: boolean | string;
           'ar-modes'?: string;
-          'camera-controls'?: boolean;
-          'auto-rotate'?: boolean;
+          'camera-controls'?: boolean | string;
+          'auto-rotate'?: boolean | string;
           'shadow-intensity'?: string;
           exposure?: string;
           poster?: string;
           loading?: string;
+          style?: React.CSSProperties;
         },
         HTMLElement
       >;
