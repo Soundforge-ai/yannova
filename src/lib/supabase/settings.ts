@@ -79,7 +79,7 @@ async function createDefaultSettings(): Promise<AppSettings> {
 
 Over Yannova:
 - Gespecialiseerd in: ramen en deuren, renovaties, isolatiewerken, gevelwerken en crepi
-- Contact: +32 412 34 56 78, info@yannova.be
+- Contact: +32 489 96 00 01, info@yannova.be
 
 Instructies:
 - Antwoord altijd in het Nederlands

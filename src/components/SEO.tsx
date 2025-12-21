@@ -64,9 +64,9 @@ const SEO: React.FC<SEOProps> = ({
     updateMeta('author', 'Yannova Bouw');
     updateMeta('language', 'Dutch');
     updateMeta('geo.region', 'BE-VAN');
-    updateMeta('geo.placename', 'Keerbergen, Antwerpen, België');
-    updateMeta('geo.position', '51.0000;4.6333');
-    updateMeta('ICBM', '51.0000, 4.6333');
+    updateMeta('geo.placename', 'Zoersel, Antwerpen, België');
+    updateMeta('geo.position', '51.2667;4.6167');
+    updateMeta('ICBM', '51.2667, 4.6167');
     
     // Open Graph tags
     updateMeta('og:title', fullTitle, true);

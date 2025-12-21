@@ -82,7 +82,7 @@ const Footer: React.FC<FooterProps> = ({ onAdminClick }) => {
           <div>
             <h4 className="text-white font-semibold mb-4">Contact</h4>
             <ul className="space-y-2 text-sm">
-              <li><a href="tel:+32412345678" className="hover:text-brand-accent transition-colors">+32 412 34 56 78</a></li>
+              <li><a href="tel:+32489960001" className="hover:text-brand-accent transition-colors">+32 489 96 00 01</a></li>
               <li><a href="mailto:info@yannova.be" className="hover:text-brand-accent transition-colors">info@yannova.be</a></li>
             </ul>
             <h4 className="text-white font-semibold mb-2 mt-6">Dienstenregio</h4>

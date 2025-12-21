@@ -22,11 +22,12 @@ export const SERVICE_AREAS = [
 
 export const NAV_ITEMS: NavItem[] = [
   { label: 'Home', href: '/' },
+  { label: 'Ramen & Deuren', href: '/ramen-deuren' },
   { label: 'Gevel', href: '/gevel' },
+  { label: 'Renovatie', href: '/renovatie' },
+  { label: 'Tuinaanleg', href: '/tuinaanleg' },
+  { label: 'Showroom', href: '/showroom' },
   { label: 'Over Ons', href: '/over-ons' },
-  { label: 'Diensten', href: '/diensten' },
-  { label: 'Aanpak', href: '/aanpak' },
-  { label: 'Partners', href: '/partners' },
   { label: 'Contact', href: '/contact' },
 ];
 

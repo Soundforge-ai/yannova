@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import '@google/model-viewer';
-import { ChevronLeft, ChevronRight, RotateCcw, Maximize2, Smartphone } from 'lucide-react';
+import { ChevronLeft, ChevronRight, RotateCcw, Maximize2, Smartphone, Sun, Moon, Lightbulb } from 'lucide-react';
 
-// TypeScript declaration for model-viewer
+// TypeScript declaration for model-viewer met uitgebreide lighting opties
 declare global {
   namespace JSX {
     interface IntrinsicElements {
@@ -14,17 +14,75 @@ declare global {
           'ar-modes'?: string;
           'camera-controls'?: boolean;
           'auto-rotate'?: boolean;
+          'auto-rotate-delay'?: string;
+          'rotation-per-second'?: string;
+          'interaction-prompt'?: string;
           'shadow-intensity'?: string;
+          'shadow-softness'?: string;
           'environment-image'?: string;
+          'skybox-image'?: string;
           exposure?: string;
           poster?: string;
           loading?: string;
+          'camera-orbit'?: string;
+          'min-camera-orbit'?: string;
+          'max-camera-orbit'?: string;
+          'field-of-view'?: string;
+          'min-field-of-view'?: string;
+          'max-field-of-view'?: string;
+          'touch-action'?: string;
+          ref?: React.RefObject<HTMLElement>;
         },
         HTMLElement
       >;
     }
   }
 }
+
+// Belichting presets voor verschillende sferen
+type LightingPreset = 'studio' | 'warm' | 'outdoor' | 'dramatic';
+
+const LIGHTING_PRESETS: Record<LightingPreset, {
+  name: string;
+  icon: React.ReactNode;
+  environment: string;
+  exposure: string;
+  shadowIntensity: string;
+  shadowSoftness: string;
+}> = {
+  studio: {
+    name: 'Studio',
+    icon: <Lightbulb size={18} />,
+    environment: 'neutral',
+    exposure: '1.0',
+    shadowIntensity: '1.2',
+    shadowSoftness: '0.8',
+  },
+  warm: {
+    name: 'Warm',
+    icon: <Sun size={18} />,
+    environment: 'legacy',
+    exposure: '1.2',
+    shadowIntensity: '0.8',
+    shadowSoftness: '1.0',
+  },
+  outdoor: {
+    name: 'Buiten',
+    icon: <Sun size={18} />,
+    environment: 'legacy',
+    exposure: '0.9',
+    shadowIntensity: '1.5',
+    shadowSoftness: '0.5',
+  },
+  dramatic: {
+    name: 'Dramatisch',
+    icon: <Moon size={18} />,
+    environment: 'neutral',
+    exposure: '0.6',
+    shadowIntensity: '2.0',
+    shadowSoftness: '0.3',
+  },
+};
 
 /*
  * ============================================
@@ -103,8 +161,12 @@ const Showroom: React.FC = () => {
   const [currentDoor, setCurrentDoor] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [modelError, setModelError] = useState(false);
+  const [lighting, setLighting] = useState<LightingPreset>('studio');
+  const [isAutoRotating, setIsAutoRotating] = useState(true);
+  const modelViewerRef = useRef<HTMLElement>(null);
 
   const door = DOORS[currentDoor];
+  const lightingConfig = LIGHTING_PRESETS[lighting];
 
   // Fallback naar demo model als lokaal model niet bestaat
   const modelSrc = modelError 
@@ -118,6 +180,14 @@ const Showroom: React.FC = () => {
   const prevDoor = () => {
     setModelError(false);
     setCurrentDoor((prev) => (prev - 1 + DOORS.length) % DOORS.length);
+  };
+
+  // Reset camera naar beginpositie
+  const resetCamera = () => {
+    if (modelViewerRef.current) {
+      (modelViewerRef.current as any).cameraOrbit = '0deg 75deg 105%';
+      (modelViewerRef.current as any).fieldOfView = '30deg';
+    }
   };
 
   return (
@@ -138,25 +208,62 @@ const Showroom: React.FC = () => {
 
         <div className="grid lg:grid-cols-2 gap-8 items-center">
           {/* 3D Viewer */}
-          <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-slate-900' : ''}`}>
-            <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-4 shadow-2xl">
+          <div className={`relative ${isFullscreen ? 'fixed inset-0 z-50 bg-slate-900 p-4' : ''}`}>
+            {/* Lighting selector */}
+            <div className="flex gap-2 mb-4 justify-center lg:justify-start">
+              {(Object.keys(LIGHTING_PRESETS) as LightingPreset[]).map((preset) => (
+                <button
+                  key={preset}
+                  onClick={() => setLighting(preset)}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    lighting === preset
+                      ? 'bg-amber-500 text-white'
+                      : 'bg-white/10 text-white/70 hover:bg-white/20'
+                  }`}
+                >
+                  {LIGHTING_PRESETS[preset].icon}
+                  {LIGHTING_PRESETS[preset].name}
+                </button>
+              ))}
+            </div>
+
+            <div className="bg-gradient-to-br from-slate-800 to-slate-700 rounded-2xl p-4 shadow-2xl relative overflow-hidden">
+              {/* Decoratieve lichtstralen achtergrond */}
+              <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute -top-20 -left-20 w-40 h-40 bg-amber-500/20 rounded-full blur-3xl" />
+                <div className="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl" />
+                <div className="absolute -bottom-10 left-1/2 w-48 h-24 bg-amber-400/15 rounded-full blur-2xl" />
+              </div>
               <model-viewer
+                ref={modelViewerRef as any}
                 src={modelSrc}
                 alt={door.name}
                 ar
                 ar-modes="webxr scene-viewer quick-look"
                 camera-controls
-                auto-rotate
-                shadow-intensity="1"
-                exposure="0.8"
+                auto-rotate={isAutoRotating}
+                auto-rotate-delay="0"
+                rotation-per-second="20deg"
+                interaction-prompt="auto"
+                shadow-intensity={lightingConfig.shadowIntensity}
+                shadow-softness={lightingConfig.shadowSoftness}
+                exposure={lightingConfig.exposure}
+                environment-image={lightingConfig.environment}
+                camera-orbit="0deg 75deg 105%"
+                min-camera-orbit="auto auto 50%"
+                max-camera-orbit="auto auto 200%"
+                field-of-view="30deg"
+                min-field-of-view="20deg"
+                max-field-of-view="45deg"
+                touch-action="pan-y"
                 loading="eager"
                 poster={door.poster}
                 onError={() => setModelError(true)}
                 style={{
                   width: '100%',
-                  height: isFullscreen ? '100vh' : '500px',
+                  height: isFullscreen ? 'calc(100vh - 100px)' : '500px',
                   borderRadius: '12px',
-                  backgroundColor: '#1e293b',
+                  backgroundColor: lighting === 'dramatic' ? '#0f172a' : '#1e293b',
                 }}
               />
               
@@ -171,21 +278,39 @@ const Showroom: React.FC = () => {
               <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-2">
                 <button
                   onClick={prevDoor}
-                  className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all"
+                  className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all hover:scale-110"
                   aria-label="Vorige deur"
                 >
                   <ChevronLeft size={24} />
                 </button>
                 <button
+                  onClick={() => setIsAutoRotating(!isAutoRotating)}
+                  className={`p-3 backdrop-blur-md rounded-full text-white transition-all hover:scale-110 ${
+                    isAutoRotating ? 'bg-amber-500/80 hover:bg-amber-600/80' : 'bg-white/10 hover:bg-white/20'
+                  }`}
+                  aria-label={isAutoRotating ? 'Stop rotatie' : 'Start rotatie'}
+                  title={isAutoRotating ? 'Klik om te stoppen' : 'Klik om te draaien'}
+                >
+                  <RotateCcw size={24} className={isAutoRotating ? 'animate-spin' : ''} style={{ animationDuration: '3s' }} />
+                </button>
+                <button
                   onClick={() => setIsFullscreen(!isFullscreen)}
-                  className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all"
+                  className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all hover:scale-110"
                   aria-label="Volledig scherm"
                 >
                   <Maximize2 size={24} />
                 </button>
                 <button
+                  onClick={resetCamera}
+                  className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all hover:scale-110"
+                  aria-label="Reset camera"
+                  title="Reset weergave"
+                >
+                  <RotateCcw size={24} />
+                </button>
+                <button
                   onClick={nextDoor}
-                  className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all"
+                  className="p-3 bg-white/10 hover:bg-white/20 backdrop-blur-md rounded-full text-white transition-all hover:scale-110"
                   aria-label="Volgende deur"
                 >
                   <ChevronRight size={24} />
@@ -193,10 +318,21 @@ const Showroom: React.FC = () => {
               </div>
 
               {/* AR Button hint */}
-              <div className="absolute top-8 right-8 flex items-center gap-2 bg-amber-500/90 text-white px-4 py-2 rounded-full text-sm font-medium">
+              <div className="absolute top-8 right-8 flex items-center gap-2 bg-amber-500/90 text-white px-4 py-2 rounded-full text-sm font-medium animate-pulse">
                 <Smartphone size={18} />
                 AR beschikbaar
               </div>
+
+              {/* Fullscreen close button */}
+              {isFullscreen && (
+                <button
+                  onClick={() => setIsFullscreen(false)}
+                  className="absolute top-4 right-4 p-3 bg-red-500/80 hover:bg-red-600 rounded-full text-white transition-all z-10"
+                  aria-label="Sluiten"
+                >
+                  ✕
+                </button>
+              )}
             </div>
           </div>
 
@@ -252,7 +388,10 @@ const Showroom: React.FC = () => {
               >
                 Offerte aanvragen
               </a>
-              <button className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-lg font-bold transition-all">
+              <button 
+                onClick={resetCamera}
+                className="flex items-center justify-center gap-2 bg-white/10 hover:bg-white/20 text-white px-8 py-4 rounded-lg font-bold transition-all"
+              >
                 <RotateCcw size={20} />
                 Reset weergave
               </button>
@@ -260,10 +399,14 @@ const Showroom: React.FC = () => {
 
             {/* Instructions */}
             <div className="bg-slate-700/50 rounded-xl p-4 text-sm text-gray-400">
-              <p className="font-medium text-white mb-2">💡 Tip:</p>
-              <p>
-                Gebruik uw muis om te draaien en te zoomen. Op mobiel kunt u de AR-knop gebruiken om de deur in uw eigen woning te bekijken!
-              </p>
+              <p className="font-medium text-white mb-2">💡 Bediening:</p>
+              <ul className="space-y-1">
+                <li>🖱️ <strong>Muis slepen:</strong> Deur draaien</li>
+                <li>🔍 <strong>Scrollen:</strong> In- en uitzoomen</li>
+                <li>🔄 <strong>Auto-rotate:</strong> Rustig ronddraaien</li>
+                <li>📱 <strong>AR:</strong> Bekijk in uw eigen woning</li>
+                <li>💡 <strong>Belichting:</strong> Kies sfeer bovenaan</li>
+              </ul>
             </div>
           </div>
         </div>

@@ -49,7 +49,8 @@ import {
   ArrowDownRight,
   MessageCircle,
   Bot,
-  User
+  User,
+  Box
 } from 'lucide-react';
 import { chatStorage, ChatSession } from '../lib/chatStorage';
 import { settingsStorage, AppSettings, defaultSettings, KnowledgeDocument, AIProvider } from '../lib/settingsStorage';
@@ -57,11 +58,14 @@ import { pageStorage, PageData } from '../lib/pageStorage';
 import { mediaStorage, MediaItem } from '../lib/mediaStorage';
 import { analyzeConversation, generateSEO, generateAdCopy } from '../lib/ai';
 import { chatService } from '../lib/chatService';
+import { ThreeDBuilder } from './admin/ThreeDBuilder';
+import { SEOManager } from './admin/SEOManager';
 import { Lead } from '../types';
 import { Link, useNavigate } from 'react-router-dom';
 import { COMPANY_NAME } from '../constants';
 import { GoogleOAuthProvider, GoogleLogin, CredentialResponse } from '@react-oauth/google';
 import { jwtDecode } from 'jwt-decode';
+import ThreeDBuilder from './admin/ThreeDBuilder';
 
 const GOOGLE_CLIENT_ID = (import.meta as any).env.VITE_GOOGLE_CLIENT_ID;
 
@@ -79,7 +83,7 @@ interface AdminDashboardProps {
   onLogout: () => void;
 }
 
-type TabType = 'dashboard' | 'leads' | 'settings' | 'chats' | 'pages' | 'media' | 'marketing';
+type TabType = 'dashboard' | 'leads' | 'settings' | 'chats' | 'pages' | 'media' | 'marketing' | '3dbuilder' | 'seo';
 type FilterStatus = 'all' | Lead['status'];
 
 const ITEMS_PER_PAGE = 10;
@@ -141,6 +145,9 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     { id: 'gevelisolatie', title: 'Gevelisolatie', slug: 'gevel/gevelisolatie', path: '/gevel/gevelisolatie', type: 'static' as const },
     { id: 'steenstrips', title: 'Steenstrips', slug: 'gevel/steenstrips', path: '/gevel/steenstrips', type: 'static' as const },
     { id: 'gevelrenovatie', title: 'Gevelrenovatie', slug: 'gevel/gevelrenovatie', path: '/gevel/gevelrenovatie', type: 'static' as const },
+    { id: 'ramen-deuren', title: 'Ramen & Deuren', slug: 'ramen-deuren', path: '/ramen-deuren', type: 'static' as const },
+    { id: 'tuinaanleg', title: 'Tuinaanleg', slug: 'tuinaanleg', path: '/tuinaanleg', type: 'static' as const },
+    { id: 'renovatie', title: 'Renovatie', slug: 'renovatie', path: '/renovatie', type: 'static' as const },
   ];
 
   // Media state
@@ -208,15 +215,41 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
   };
 
+  // Initialize PDF.js worker
+  useEffect(() => {
+    import('pdfjs-dist').then(pdfjsLib => {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjsLib.version}/pdf.worker.min.js`;
+    });
+  }, []);
+
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     const file = files[0];
-    const reader = new FileReader();
+    let content = '';
 
-    reader.onload = async (event) => {
-      const content = event.target?.result as string;
+    try {
+      if (file.type === 'application/pdf') {
+        const arrayBuffer = await file.arrayBuffer();
+        const pdfjsLib = await import('pdfjs-dist');
+        const pdf = await pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+
+        let fullText = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const textContent = await page.getTextContent();
+          const pageText = textContent.items.map((item: any) => item.str).join(' ');
+          fullText += pageText + '\n\n';
+        }
+        content = fullText;
+      } else {
+        content = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (event) => resolve(event.target?.result as string);
+          reader.readAsText(file);
+        });
+      }
 
       const newDoc: KnowledgeDocument = {
         id: Date.now().toString(),
@@ -232,12 +265,11 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
       };
 
       setSettings(updatedSettings);
-      await settingsStorage.saveSettings(updatedSettings); // Auto save after upload
-    };
-
-    // Read as text (works for txt, md, json, csv, etc.)
-    // For PDFs locally without backend, we'd need a heavier library like pdf.js, skipping for now
-    reader.readAsText(file);
+      await settingsStorage.saveSettings(updatedSettings);
+    } catch (error) {
+      console.error('Error reading file:', error);
+      alert('Fout bij het lezen van bestand. Probeer opnieuw.');
+    }
 
     // Reset input
     if (fileInputRef.current) fileInputRef.current.value = '';
@@ -859,6 +891,14 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
             AI Marketing
           </button>
           <button
+            onClick={() => setActiveTab('3dbuilder')}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === '3dbuilder' ? 'bg-brand-accent text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
+              }`}
+          >
+            <Box size={20} />
+            3D Builder
+          </button>
+          <button
             onClick={() => setActiveTab('settings')}
             className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${activeTab === 'settings' ? 'bg-brand-accent text-white' : 'text-gray-400 hover:bg-gray-800 hover:text-white'
               }`}
@@ -898,7 +938,8 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   activeTab === 'chats' ? 'Chat Gesprekken' :
                     activeTab === 'pages' ? 'Paginabeheer' :
                       activeTab === 'media' ? 'Media Bibliotheek' :
-                        activeTab === 'marketing' ? 'AI Marketing Tools' : 'Instellingen'}
+                        activeTab === 'marketing' ? 'AI Marketing Tools' :
+                          activeTab === '3dbuilder' ? '3D Model Builder' : 'Instellingen'}
             </h1>
             <p className="text-gray-500">Welkom terug, Admin</p>
           </div>
@@ -1727,6 +1768,10 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
           </div>
         )}
 
+        {activeTab === '3dbuilder' && (
+          <ThreeDBuilder />
+        )}
+
         {activeTab === 'settings' && (
           <div className="max-w-4xl mx-auto space-y-8">
 
@@ -1915,7 +1960,7 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 <input
                   type="file"
                   ref={fileInputRef}
-                  accept=".txt,.md,.json,.csv,.js,.ts,.tsx"
+                  accept=".txt,.md,.json,.csv,.js,.ts,.tsx,.pdf"
                   className="hidden"
                   onChange={handleFileUpload}
                 />

@@ -3,8 +3,8 @@ import { Phone, Mail, MapPin, Clock, CheckCircle, AlertCircle, Send } from 'luci
 import GoogleMap from '../components/GoogleMap';
 
 // Company location
-const COMPANY_ADDRESS = 'Bouwstraat 123, 1000 Brussel, België';
-const COMPANY_COORDINATES = { lat: 50.8503, lng: 4.3517 }; // Brussels coordinates
+const COMPANY_ADDRESS = 'De Beemdekens 39, 2980 Zoersel, België';
+const COMPANY_COORDINATES = { lat: 51.2667, lng: 4.6167 }; // Zoersel coordinates
 
 interface FormErrors {
   name?: string;
@@ -105,7 +105,7 @@ const Contact: React.FC = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold text-brand-dark">Adres</h3>
-                        <p className="text-gray-600">Bouwstraat 123<br />1000 Brussel, België</p>
+                        <p className="text-gray-600">De Beemdekens 39<br />2980 Zoersel, België</p>
                       </div>
                     </div>
                     <div className="flex items-start gap-4">
@@ -114,8 +114,8 @@ const Contact: React.FC = () => {
                       </div>
                       <div>
                         <h3 className="font-semibold text-brand-dark">Telefoon</h3>
-                        <a href="tel:+32412345678" className="text-gray-600 hover:text-brand-accent">
-                          +32 412 34 56 78
+                        <a href="tel:+32489960001" className="text-gray-600 hover:text-brand-accent">
+                          +32 489 96 00 01
                         </a>
                       </div>
                     </div>
@@ -192,7 +192,7 @@ const Contact: React.FC = () => {
                             value={formData.phone}
                             onChange={handleChange}
                             className={inputClasses('phone')}
-                            placeholder="0412 34 56 78"
+                            placeholder="0489 96 00 01"
                           />
                           {errors.phone && (
                             <p className="mt-1 text-sm text-red-500 flex items-center gap-1">

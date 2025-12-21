@@ -179,7 +179,7 @@ const CrepiInfo: React.FC = () => {
                 Gratis Offerte Aanvragen <ArrowRight size={20} />
               </Link>
               <a
-                href="tel:+32412345678"
+                href="tel:+32489960001"
                 className="bg-white/10 hover:bg-white/20 border border-white/30 text-white px-8 py-4 rounded-md font-bold text-lg transition-all flex items-center justify-center"
               >
                 Bel Ons Direct

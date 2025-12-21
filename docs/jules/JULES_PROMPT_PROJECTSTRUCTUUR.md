@@ -1,0 +1,112 @@
+# Jules Prompt: Projectstructuur Verbeteringen
+
+Gebruik deze prompt in de Jules Assistant interface (route: `/jules-assistant`) of via de Jules API.
+
+## Prompt voor Jules
+
+```
+Verbeter de projectstructuur van het Yannova React project volgens best practices.
+
+HUIDIGE PROBLEMEN:
+1. Inconsistente bestandsnamen: Mix van Engels (Home.tsx) en Nederlands (OverOns.tsx, Aanpak.tsx) in pages/
+2. Root level bestanden: Scripts (download_images.sh, generate_image_gemini.py) en config bestanden zouden beter georganiseerd moeten worden
+3. Duplicatie: Zowel puck.config.ts als puck.config.tsx bestaan in pages/dashboard/editor/
+4. Missing directories: Geen utils/, config/, scripts/, docs/ directories
+5. Type definitions: types.ts in root zou in types/ directory moeten met meerdere bestanden
+6. Test structuur: Alleen test/setup.ts, geen test bestanden bij componenten
+7. Documentation: AGENTS.md, README.md, PUCK_SETUP.md verspreid in root, zouden in docs/ kunnen
+
+GEWENSTE STRUCTUUR:
+```
+yannova/
+├── src/                          # Nieuwe src directory voor alle source code
+│   ├── components/               # React componenten
+│   │   ├── common/              # Algemene herbruikbare componenten
+│   │   ├── gevel/               # Gevel-specifieke componenten (behouden)
+│   │   └── ...
+│   ├── pages/                    # Route-specifieke pagina's
+│   ├── hooks/                    # Custom React hooks
+│   ├── contexts/                 # React contexts
+│   ├── lib/                      # Libraries en services
+│   │   ├── api/
+│   │   ├── sanity/
+│   │   └── supabase/
+│   ├── types/                    # TypeScript type definities (nieuwe directory)
+│   │   ├── index.ts
+│   │   ├── components.ts
+│   │   └── api.ts
+│   ├── utils/                    # Utility functies (nieuwe directory)
+│   ├── constants/                # Constants (nieuwe directory, verplaats constants.tsx)
+│   └── i18n/                     # Vertalingen
+├── scripts/                      # Build scripts en utilities (nieuwe directory)
+│   ├── download_images.sh
+│   └── generate_image_gemini.py
+├── config/                       # Configuratie bestanden (nieuwe directory)
+│   └── vite.config.ts (verplaats)
+├── docs/                         # Documentatie (nieuwe directory)
+│   ├── AGENTS.md
+│   ├── README.md
+│   └── PUCK_SETUP.md
+├── test/                         # Test setup (behouden)
+├── public/                       # Statische assets
+└── schemas/                      # Sanity schemas (behouden)
+```
+
+ACTIES:
+1. Maak nieuwe directories: src/, src/types/, src/utils/, src/constants/, scripts/, config/, docs/
+2. Verplaats bestanden naar juiste locaties:
+   - components/ → src/components/
+   - pages/ → src/pages/
+   - hooks/ → src/hooks/
+   - contexts/ → src/contexts/
+   - lib/ → src/lib/
+   - i18n/ → src/i18n/
+   - types.ts → src/types/index.ts (split in meerdere bestanden indien nodig)
+   - constants.tsx → src/constants/index.tsx
+   - download_images.sh → scripts/
+   - generate_image_gemini.py → scripts/
+   - vite.config.ts → config/
+   - AGENTS.md → docs/
+   - PUCK_SETUP.md → docs/
+3. Los duplicatie op: Verwijder puck.config.ts of puck.config.tsx (behoud de meest recente/complete versie)
+4. Update alle import paths in alle bestanden:
+   - Update @/ paths in tsconfig.json en vite.config.ts
+   - Update alle relative imports naar nieuwe locaties
+   - Update App.tsx lazy imports
+5. Standaardiseer bestandsnamen (optioneel, maar consistent):
+   - Overweeg om alle page bestanden Engels te maken OF alle Nederlands (kies één taal)
+   - Of behoud huidige mix maar documenteer de conventie
+6. Update .gitignore indien nodig voor nieuwe structuur
+7. Update package.json scripts indien nodig
+
+BELANGRIJK:
+- Behoud alle functionaliteit - alleen reorganisatie
+- Test dat alle imports correct werken na verplaatsing
+- Zorg dat build nog steeds werkt
+- Update README.md met nieuwe structuur uitleg
+
+Gebruik automationMode: AUTO_CREATE_PR om automatisch een pull request aan te maken met alle wijzigingen.
+```
+
+## Hoe te gebruiken
+
+### Optie 1: Via Jules Assistant Interface
+1. Start je development server: `npm run dev`
+2. Ga naar `/jules-assistant` in je browser
+3. Kopieer de bovenstaande prompt
+4. Kies "Auto Pull Request" modus
+5. Klik op "Start Jules Sessie"
+
+### Optie 2: Via API (als repository is verbonden)
+Zorg dat je `VITE_JULES_API_KEY` hebt in `.env.local` en run:
+```bash
+node improve-project-structure.mjs
+```
+
+## Notities
+
+- De repository moet verbonden zijn met Jules via GitHub
+- Zorg dat je de juiste GitHub repository hebt ingesteld in de Jules configuratie
+- Jules zal automatisch een pull request aanmaken met alle wijzigingen
+- Review de PR voordat je merge om te zorgen dat alles correct is
+

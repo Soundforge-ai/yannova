@@ -22,6 +22,7 @@ export interface AppSettings {
     botName: string;
     systemPrompt: string;
     knowledgeBase: KnowledgeDocument[];
+    threeDApiUrl?: string; // URL for the external 3D generator (e.g., ngrok from Colab)
 }
 
 const SETTINGS_KEY = 'yannova_app_settings';
@@ -66,13 +67,14 @@ export const defaultSettings: AppSettings = {
 
 Over Yannova:
 - Gespecialiseerd in: ramen en deuren, renovaties, isolatiewerken, gevelwerken en crepi
-- Contact: +32 412 34 56 78, info@yannova.be
+- Contact: +32 489 96 00 01, info@yannova.be
 
 Instructies:
 - Antwoord altijd in het Nederlands
 - Wees vriendelijk en professioneel
 - Houd antwoorden kort en bondig`,
-    knowledgeBase: []
+    knowledgeBase: [],
+    threeDApiUrl: ''
 };
 
 // Helper for deep merging defaults
@@ -92,6 +94,7 @@ const mergeDefaults = (saved: any): AppSettings => {
         uploadDate: new Date(d.uploadDate)
     }));
     if (saved.activeProvider) base.activeProvider = saved.activeProvider;
+    if (saved.threeDApiUrl) base.threeDApiUrl = saved.threeDApiUrl;
 
     // Merge providers
     if (saved.providers) {

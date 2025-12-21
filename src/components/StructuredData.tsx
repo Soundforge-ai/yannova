@@ -40,23 +40,23 @@ const StructuredData: React.FC = () => {
       "alternateName": ["Yannova", "Yannova Ramen en Deuren"],
       "description": "Yannova Bouw - Specialist in ramen en deuren, renovatie, isolatie en crepi gevelafwerking in Keerbergen, Mechelen, Zoersel, Putte en omgeving.",
       "url": "https://www.yannova.be",
-      "telephone": "+32412345678",
+      "telephone": "+32489960001",
       "email": "info@yannova.be",
       "priceRange": "€€",
       "currenciesAccepted": "EUR",
       "paymentAccepted": "Cash, Credit Card, Bank Transfer",
       "address": {
         "@type": "PostalAddress",
-        "streetAddress": "Bouwstraat 123",
-        "addressLocality": "Keerbergen",
+        "streetAddress": "De Beemdekens 39",
+        "addressLocality": "Zoersel",
         "addressRegion": "Antwerpen",
-        "postalCode": "3140",
+        "postalCode": "2980",
         "addressCountry": "BE"
       },
       "geo": {
         "@type": "GeoCoordinates",
-        "latitude": "51.0000",
-        "longitude": "4.6333"
+        "latitude": "51.2667",
+        "longitude": "4.6167"
       },
       "aggregateRating": {
         "@type": "AggregateRating",
@@ -156,7 +156,7 @@ const StructuredData: React.FC = () => {
       "logo": "https://www.yannova.be/images/logo.png",
       "contactPoint": {
         "@type": "ContactPoint",
-        "telephone": "+32412345678",
+        "telephone": "+32489960001",
         "contactType": "customer service",
         "availableLanguage": ["Dutch", "French"]
       }

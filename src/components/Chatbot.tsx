@@ -228,7 +228,7 @@ const Chatbot: React.FC = () => {
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: 'assistant',
-          content: `Sorry, er ging iets mis (${errorMsg}). U kunt ons bereiken via telefoon (+32 412 34 56 78) of email (info@yannova.be).`,
+          content: `Sorry, er ging iets mis (${errorMsg}). U kunt ons bereiken via telefoon (+32 489 96 00 01) of email (info@yannova.be).`,
           timestamp: new Date(),
         };
 

@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "showroom-crawler": {
+      "command": "node",
+      "args": [
+        "/Users/innovarslabo/Desktop/yannova/mcp-crawler/index.js"
+      ]
+    }
+  }
+}

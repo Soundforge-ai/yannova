@@ -113,6 +113,41 @@ export const analyzeConversation = async (messages: Message[]): Promise<string> 
 
     } catch (error) {
         console.error('AI Analysis failed:', error);
+
         return 'Fout bij het analyseren van het gesprek. Controleer de API connectie.';
+    }
+};
+
+export const generate3DModel = async (prompt: string, imageBase64?: string): Promise<{ success: boolean; model?: string; error?: string }> => {
+    try {
+        const settings = await settingsStorage.getSettings();
+        const apiUrl = settings.threeDApiUrl;
+
+        if (!apiUrl) {
+            return { success: false, error: 'Geen 3D API URL ingesteld. Start de Colab notebook en voer de URL in bij instellingen.' };
+        }
+
+        // Ensure URL doesn't end with slash if we append /generate, or just handle it
+        const endpoint = apiUrl.endsWith('/') ? `${apiUrl}generate` : `${apiUrl}/generate`;
+
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'ngrok-skip-browser-warning': 'true'
+            },
+            body: JSON.stringify({ prompt, image: imageBase64 })
+        });
+
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+        return data;
+
+    } catch (error: any) {
+        console.error('3D Generation failed:', error);
+        return { success: false, error: error.message || 'Fout bij genereren van 3D model.' };
     }
 };
