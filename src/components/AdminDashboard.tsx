@@ -82,6 +82,7 @@ const ALLOWED_ADMIN_EMAILS = [
 interface AdminDashboardProps {
   leads: Lead[];
   onUpdateStatus: (id: string, status: Lead['status']) => void;
+  onDeleteLead: (id: string) => void;
   onLogout: () => void;
 }
 
@@ -93,6 +94,7 @@ const ITEMS_PER_PAGE = 10;
 const AdminDashboard: React.FC<AdminDashboardProps> = ({
   leads,
   onUpdateStatus,
+  onDeleteLead,
   onLogout,
 }) => {
   const navigate = useNavigate();

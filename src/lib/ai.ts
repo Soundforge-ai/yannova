@@ -83,7 +83,7 @@ export const analyzeConversation = async (messages: Message[]): Promise<string> 
   `;
 
     try {
-        const settings = settingsStorage.getSettings();
+        const settings = await settingsStorage.getSettings();
         const activeProvider = settings.activeProvider;
         const apiKey = settings.providers[activeProvider]?.apiKey || (import.meta as any).env?.VITE_GLM_API_KEY || '811527f3930042a1bbb640cb781698ed.8vd45senzrMRJmhd';
 

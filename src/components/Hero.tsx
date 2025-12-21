@@ -57,7 +57,7 @@ const Hero: React.FC = () => {
               Ontdek onze diensten
             </a>
             <a
-              href="#showroom"
+              href="/showroom"
               className="bg-gradient-to-r from-amber-500 to-orange-600 hover:from-amber-600 hover:to-orange-700 text-white px-8 py-4 rounded-md font-bold text-lg transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 border-2 border-amber-400/50 animate-pulse hover:animate-none"
             >
               🏠 SHOWROOM

@@ -6,8 +6,8 @@ export interface ChatMessage {
 }
 
 export const chatService = {
-    sendMessage: async (messages: ChatMessage[], signal?: AbortSignal) => {
-        const settings = settingsStorage.getSettings();
+    async sendMessage(messages: ChatMessage[], signal?: AbortSignal): Promise<string> {
+        const settings = await settingsStorage.getSettings();
         const provider = settings.activeProvider;
         const config = settings.providers[provider];
 
